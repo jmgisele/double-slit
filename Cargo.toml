@@ -1,0 +1,27 @@
+[package]
+name = "double_slit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# remove dynamic before releasing! just speeds up dev compile times
+bevy = { version = "0.9.1", features = ["wayland", "x11"] }
+# bevy = { version = "0.9.1", features = ["wayland", "x11", "dynamic"] }
+bevy-inspector-egui = "0.17.0"
+bevy_prototype_lyon = "0.7.2"
+
+# if mold is misbehaving, comment me out
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=/usr/bin/mold"]
+
+[workspace]
+resolver = "2" # Important! wgpu/Bevy needs this!
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
