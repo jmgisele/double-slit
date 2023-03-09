@@ -1,18 +1,29 @@
-use crate::ui::{
-    get_base, get_button_bkgnd, get_control_container, get_display_box, get_interference_screen,
-    get_separation_screen_slit, get_separator, get_slit, get_slit_controls, get_slit_screen,
-    get_txt, BUTTON_TEXT_COLOR, LABEL_TEXT_COLOR, NORMAL_BUTTON, PRESSED_BUTTON,
+use crate::{
+    component::{
+        CustomMaterial, DisplayInfo, Increment, Light, Slit, SlitControl, SlitScreen, SlitStructure,
+    },
+    ui::{setup_ui, NORMAL_BUTTON, PRESSED_BUTTON},
+    WINDOW_HEIGHT,
 };
-use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use bevy::math::f32::Quat;
+use bevy::sprite::Material2dPlugin;
+use bevy::{ecs::schedule::ShouldRun, prelude::*, sprite::MaterialMesh2dBundle};
+
 pub struct SlitPlugin;
 impl Plugin for SlitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_slits)
+        app.add_plugin(Material2dPlugin::<CustomMaterial>::default())
+            .add_startup_system(setup_ui)
+            .add_startup_system(setup_screen)
+            .add_startup_system(setup_slits)
             .add_system(increment_sep_system)
             .add_system_set(
                 SystemSet::new()
                     .with_run_criteria(update_display_criteria)
-                    .with_system(update_display),
+                    .with_system(update_slit_distance)
+                    .with_system(update_slit_width)
+                    .with_system(update_slit_separation)
+                    .with_system(update_light_color),
             )
             .add_system_set(
                 SystemSet::new()
@@ -22,219 +33,100 @@ impl Plugin for SlitPlugin {
     }
 }
 
-#[derive(Resource)]
-pub struct SlitStructure {
-    pub separation: f32,
-    pub slit_width: f32,
-    pub wavelength: f32,
-    pub screen_distance: f32,
-}
+const BASELINE_Y_SLITS: f32 = (WINDOW_HEIGHT - SLIT_SCREEN_HEIGHT) / 2. - SLIT_SCREEN_HEIGHT * 2.;
+const BASELINE_X_SLITS: f32 = 150. - SLIT_SCREEN_WIDTH / 2.;
+const SLIT_SCREEN_WIDTH: f32 = 500.;
+const SLIT_SCREEN_HEIGHT: f32 = 100.;
 
-impl Default for SlitStructure {
-    fn default() -> Self {
-        SlitStructure {
-            separation: 5.,        // centimeters
-            slit_width: 10.,       // milimeters
-            wavelength: 500.,      // nanometers
-            screen_distance: 100., // centimeters
-        }
-    }
-}
-
-impl SlitStructure {
-    fn add_val(&mut self, opt: &SlitControl, val: f32) {
-        match opt {
-            SlitControl::Separation => self.separation += val,
-            SlitControl::ScreenDistance => self.screen_distance += val,
-            SlitControl::Wavelength => self.wavelength += val,
-            SlitControl::Width => self.slit_width += val,
-        }
-    }
-}
-
-#[derive(Component, Copy, Clone)]
-pub enum SlitControl {
-    Separation,
-    Width,
-    Wavelength,
-    ScreenDistance,
-}
-
-#[derive(Component)]
-pub struct DisplayInfo;
-
-#[derive(Component)]
-pub struct Adjustable;
-
-#[derive(Component)]
-pub struct Increment(f32);
-
-fn setup_slits(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let defaults = SlitStructure::default();
-
-    commands.spawn(get_base()).with_children(|parent| {
-        parent.spawn(get_display_box()).with_children(|parent| {
-            // interference display
-            parent.spawn(get_interference_screen());
-            // screen : slit separator
-            parent
-                .spawn(get_separation_screen_slit())
-                .insert(SlitControl::ScreenDistance)
-                .insert(Adjustable);
-            parent.spawn(get_slit_screen()).with_children(|parent| {
-                // left slit
-                parent
-                    .spawn(get_slit(Color::rgb(1., 1., 1.)))
-                    .insert(SlitControl::Width)
-                    .insert(Adjustable);
-                // separator
-                parent
-                    .spawn(get_separator(defaults.separation))
-                    .insert(SlitControl::Separation)
-                    .insert(Adjustable);
-                // right slit
-                parent
-                    .spawn(get_slit(Color::rgb(1., 1., 1.)))
-                    .insert(SlitControl::Width)
-                    .insert(Adjustable);
-            });
-        });
-
-        //CONTROLS
-        parent.spawn(get_slit_controls()).with_children(|parent| {
-            // SLIT SEPARATOR
-            parent.spawn(get_txt(
-                "Slit Separation (cm)",
-                LABEL_TEXT_COLOR,
-                &asset_server,
-            ));
-            parent
-                .spawn(get_control_container())
-                .with_children(|parent| {
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(-1.))
-                        .insert(SlitControl::Separation)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("-", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                    parent.spawn(get_button_bkgnd()).with_children(|parent| {
-                        parent
-                            .spawn(get_txt(
-                                &defaults.separation.to_string(),
-                                BUTTON_TEXT_COLOR,
-                                &asset_server,
-                            ))
-                            .insert(SlitControl::Separation)
-                            .insert(DisplayInfo);
-                    });
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(1.))
-                        .insert(SlitControl::Separation)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("+", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                });
-            // SLIT WIDTH
-            parent.spawn(get_txt("Slit Width (mm)", LABEL_TEXT_COLOR, &asset_server));
-            parent
-                .spawn(get_control_container())
-                .with_children(|parent| {
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(-1.))
-                        .insert(SlitControl::Width)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("-", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                    parent.spawn(get_button_bkgnd()).with_children(|parent| {
-                        parent
-                            .spawn(get_txt(
-                                &defaults.slit_width.to_string(),
-                                BUTTON_TEXT_COLOR,
-                                &asset_server,
-                            ))
-                            .insert(SlitControl::Width)
-                            .insert(DisplayInfo);
-                    });
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(1.))
-                        .insert(SlitControl::Width)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("+", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                });
-            // WAVELENGTH
-            parent.spawn(get_txt("Wavelength (nm)", LABEL_TEXT_COLOR, &asset_server));
-            parent
-                .spawn(get_control_container())
-                .with_children(|parent| {
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(-25.))
-                        .insert(SlitControl::Wavelength)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("-", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                    parent.spawn(get_button_bkgnd()).with_children(|parent| {
-                        parent
-                            .spawn(get_txt(
-                                &defaults.slit_width.to_string(),
-                                BUTTON_TEXT_COLOR,
-                                &asset_server,
-                            ))
-                            .insert(SlitControl::Wavelength)
-                            .insert(DisplayInfo);
-                    });
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(25.))
-                        .insert(SlitControl::Wavelength)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("+", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                });
-
-            // DISTANCE TO SCREEN
-            parent.spawn(get_txt(
-                "Distance to Screen (m)",
-                LABEL_TEXT_COLOR,
-                &asset_server,
-            ));
-            parent
-                .spawn(get_control_container())
-                .with_children(|parent| {
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(-10.))
-                        .insert(SlitControl::ScreenDistance)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("-", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                    parent.spawn(get_button_bkgnd()).with_children(|parent| {
-                        parent
-                            .spawn(get_txt(
-                                &defaults.slit_width.to_string(),
-                                BUTTON_TEXT_COLOR,
-                                &asset_server,
-                            ))
-                            .insert(SlitControl::ScreenDistance)
-                            .insert(DisplayInfo);
-                    });
-                    parent
-                        .spawn(get_button_bkgnd())
-                        .insert(Increment(10.))
-                        .insert(SlitControl::ScreenDistance)
-                        .with_children(|parent| {
-                            parent.spawn(get_txt("+", BUTTON_TEXT_COLOR, &asset_server));
-                        });
-                });
-        });
+fn setup_screen(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    assets: Res<AssetServer>,
+    mut materials: ResMut<Assets<CustomMaterial>>,
+) {
+    let y = (WINDOW_HEIGHT - SLIT_SCREEN_HEIGHT) / 2.;
+    commands.spawn(MaterialMesh2dBundle {
+        mesh: meshes
+            .add(shape::Box::new(SLIT_SCREEN_WIDTH, SLIT_SCREEN_HEIGHT, 0.).into())
+            .into(),
+        material: materials.add(CustomMaterial {
+            color: Color::rgb(0.0, 1.0, 0.3),
+            time: 0.0,
+            image: assets.load("shaders/awesome.png"),
+        }),
+        transform: Transform::from_translation(Vec3::new(BASELINE_X_SLITS, y, 0.)),
+        ..default()
     });
+}
 
-    commands.insert_resource(defaults);
+const BASELINE_SLIT_WIDTH: f32 = 3.;
+const BASELINE_SLIT_HEIGHT: f32 = 5.;
+const BASELINE_SLIT_SCREEN_WIDTH: f32 = 300.;
+const BASELINE_SLIT_SCREEN_X: f32 = -200.;
+
+fn setup_slits(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    commands
+        .spawn(MaterialMesh2dBundle {
+            mesh: meshes
+                .add(shape::Box::new(BASELINE_SLIT_SCREEN_WIDTH, SLIT_SCREEN_HEIGHT, 0.).into())
+                .into(),
+            material: materials.add(ColorMaterial::from(Color::PURPLE)),
+            transform: Transform::from_translation(Vec3::new(BASELINE_SLIT_SCREEN_X, 0., 0.)),
+            ..default()
+        })
+        .insert(SlitScreen)
+        .with_children(|parent| {
+            parent
+                .spawn(MaterialMesh2dBundle {
+                    mesh: meshes
+                        .add(shape::Box::new(BASELINE_SLIT_WIDTH, BASELINE_SLIT_HEIGHT, 0.).into())
+                        .into(),
+                    material: materials.add(ColorMaterial::from(Color::WHITE)),
+                    transform: Transform::from_translation(Vec3::new(
+                        BASELINE_SLIT_WIDTH * 3.,
+                        0.,
+                        0.1,
+                    )),
+                    ..default()
+                })
+                .insert(Slit::RightSlit);
+
+            parent
+                .spawn(MaterialMesh2dBundle {
+                    mesh: meshes
+                        .add(shape::Box::new(BASELINE_SLIT_WIDTH, BASELINE_SLIT_HEIGHT, 0.).into())
+                        .into(),
+                    material: materials.add(ColorMaterial::from(Color::WHITE)),
+                    transform: Transform::from_translation(Vec3::new(
+                        -BASELINE_SLIT_WIDTH * 3.,
+                        0.,
+                        0.1,
+                    )),
+                    ..default()
+                })
+                .insert(Slit::LeftSlit);
+
+            let laser_height = SLIT_SCREEN_HEIGHT - BASELINE_SLIT_HEIGHT;
+            parent
+                .spawn(MaterialMesh2dBundle {
+                    mesh: meshes
+                        .add(shape::Box::new(2., laser_height, 0.).into())
+                        .into(),
+                    material: materials.add(ColorMaterial::from(Color::BLUE)),
+                    transform: Transform::from_translation(Vec3::new(
+                        -0.5 * laser_height * (15. as f32).sin(),
+                        -(laser_height / 2.) + BASELINE_SLIT_HEIGHT * 2.,
+                        0.2,
+                    ))
+                    .with_rotation(Quat::from_rotation_z(15.)),
+                    ..default()
+                })
+                .insert(Light);
+        });
 }
 
 pub fn update_display_criteria(slit_structure: Res<SlitStructure>) -> ShouldRun {
@@ -242,6 +134,76 @@ pub fn update_display_criteria(slit_structure: Res<SlitStructure>) -> ShouldRun 
         ShouldRun::Yes
     } else {
         ShouldRun::No
+    }
+}
+
+pub fn update_light_color(
+    display_query: Query<&Handle<ColorMaterial>, With<Light>>,
+    slit_structure: Res<SlitStructure>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+    for handle in display_query.iter() {
+        let mut color_mat = materials.get_mut(&handle).unwrap();
+        color_mat.color = match slit_structure.wavelength.floor() as i32 {
+            400..=500 => Color::BLUE,
+            501..=600 => Color::GREEN,
+            601..=700 => Color::RED,
+            _ => Color::WHITE,
+        }
+    }
+}
+
+pub fn update_slit_width(
+    mut display_query: Query<&mut Transform, With<Slit>>,
+    slit_structure: Res<SlitStructure>,
+) {
+    for mut transform in display_query.iter_mut() {
+        println!("updating slit width");
+        transform.scale = Vec3::new(
+            BASELINE_SLIT_WIDTH - (10. - slit_structure.slit_width) / 2.,
+            BASELINE_SLIT_HEIGHT,
+            0.1,
+        );
+    }
+}
+
+pub fn update_slit_distance(
+    mut display_query: Query<&mut Transform, With<SlitScreen>>,
+    slit_structure: Res<SlitStructure>,
+) {
+    for mut transform in display_query.iter_mut() {
+        println!("updating screen distance");
+        transform.translation = Vec3::new(
+            BASELINE_SLIT_SCREEN_X,
+            BASELINE_Y_SLITS + (100. - slit_structure.screen_distance) / 2.,
+            0.,
+        );
+    }
+}
+
+pub fn update_slit_separation(
+    mut display_query: Query<(&mut Transform, &Slit)>,
+    slit_structure: Res<SlitStructure>,
+) {
+    println!("{}", slit_structure.separation);
+    for (mut transform, slit) in display_query.iter_mut() {
+        println!("updating slit separation");
+        match slit {
+            Slit::LeftSlit => {
+                transform.translation = Vec3::new(
+                    -(slit_structure.separation - 5.) / 2. - BASELINE_SLIT_WIDTH * 3.,
+                    0.,
+                    0.1,
+                )
+            }
+            Slit::RightSlit => {
+                transform.translation = Vec3::new(
+                    (slit_structure.separation - 5.) / 2. + BASELINE_SLIT_WIDTH * 3.,
+                    0.,
+                    0.1,
+                )
+            }
+        }
     }
 }
 
@@ -255,28 +217,6 @@ pub fn update_display_buttons(
             SlitControl::ScreenDistance => (slit_structure.screen_distance / 100.).to_string(),
             SlitControl::Wavelength => slit_structure.wavelength.to_string(),
             SlitControl::Width => slit_structure.slit_width.to_string(),
-        };
-    }
-}
-
-pub fn update_display(
-    mut display_query: Query<(&mut Style, &SlitControl), With<Adjustable>>,
-    slit_structure: Res<SlitStructure>,
-) {
-    for (mut style, slit_type) in display_query.iter_mut() {
-        match slit_type {
-            SlitControl::Separation => {
-                style.size.width = Val::Px(f32::floor(5. * slit_structure.separation));
-            }
-            SlitControl::ScreenDistance => {
-                style.size.height = Val::Px(f32::floor(0.5 * slit_structure.screen_distance));
-            }
-            SlitControl::Wavelength => {
-                todo!()
-            }
-            SlitControl::Width => {
-                style.size.width = Val::Px(f32::floor(0.5 * slit_structure.slit_width));
-            }
         };
     }
 }
