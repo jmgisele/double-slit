@@ -9,6 +9,7 @@ edition = "2021"
 bevy = { version = "0.9.1", features = ["wayland", "x11", "dynamic"] }
 bevy-inspector-egui = "0.17.0"
 bevy_prototype_lyon = "0.7.2"
+rand = "0.8.5"
 
 # if mold is misbehaving, comment me out
 [target.x86_64-unknown-linux-gnu]

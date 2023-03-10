@@ -5,10 +5,12 @@ use bevy::{
     DefaultPlugins,
 };
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use interference::InterferencePlugin;
 use slit::SlitPlugin;
 use window::setup_camera;
 
 mod component;
+mod interference;
 mod slit;
 mod ui;
 mod window;
@@ -31,5 +33,6 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.80000, 1.00000, 0.80000)))
         .add_startup_system(setup_camera)
         .add_plugin(SlitPlugin)
+        .add_plugin(InterferencePlugin)
         .run();
 }

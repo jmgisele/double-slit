@@ -2,8 +2,8 @@ use crate::{
     component::{
         CustomMaterial, DisplayInfo, Increment, Light, Slit, SlitControl, SlitScreen, SlitStructure,
     },
+    interference::{BASELINE_Y_SLITS, SLIT_SCREEN_HEIGHT},
     ui::{setup_ui, NORMAL_BUTTON, PRESSED_BUTTON},
-    WINDOW_HEIGHT,
 };
 use bevy::math::f32::Quat;
 use bevy::sprite::Material2dPlugin;
@@ -12,9 +12,7 @@ use bevy::{ecs::schedule::ShouldRun, prelude::*, sprite::MaterialMesh2dBundle};
 pub struct SlitPlugin;
 impl Plugin for SlitPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(Material2dPlugin::<CustomMaterial>::default())
-            .add_startup_system(setup_ui)
-            .add_startup_system(setup_screen)
+        app.add_startup_system(setup_ui)
             .add_startup_system(setup_slits)
             .add_system(increment_sep_system)
             .add_system_set(
@@ -31,32 +29,6 @@ impl Plugin for SlitPlugin {
                     .with_system(update_display_buttons),
             );
     }
-}
-
-const BASELINE_Y_SLITS: f32 = (WINDOW_HEIGHT - SLIT_SCREEN_HEIGHT) / 2. - SLIT_SCREEN_HEIGHT * 2.;
-const BASELINE_X_SLITS: f32 = 150. - SLIT_SCREEN_WIDTH / 2.;
-const SLIT_SCREEN_WIDTH: f32 = 500.;
-const SLIT_SCREEN_HEIGHT: f32 = 100.;
-
-fn setup_screen(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    assets: Res<AssetServer>,
-    mut materials: ResMut<Assets<CustomMaterial>>,
-) {
-    let y = (WINDOW_HEIGHT - SLIT_SCREEN_HEIGHT) / 2.;
-    commands.spawn(MaterialMesh2dBundle {
-        mesh: meshes
-            .add(shape::Box::new(SLIT_SCREEN_WIDTH, SLIT_SCREEN_HEIGHT, 0.).into())
-            .into(),
-        material: materials.add(CustomMaterial {
-            color: Color::rgb(0.0, 1.0, 0.3),
-            time: 0.0,
-            image: assets.load("shaders/awesome.png"),
-        }),
-        transform: Transform::from_translation(Vec3::new(BASELINE_X_SLITS, y, 0.)),
-        ..default()
-    });
 }
 
 const BASELINE_SLIT_WIDTH: f32 = 3.;

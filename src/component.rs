@@ -1,4 +1,9 @@
-use bevy::{prelude::*, reflect::TypeUuid, render::render_resource::*, sprite::Material2d};
+use bevy::{
+    prelude::*,
+    reflect::TypeUuid,
+    render::render_resource::{AsBindGroup, ShaderRef},
+    sprite::Material2d,
+};
 
 #[derive(Resource)]
 pub struct SlitStructure {
@@ -56,13 +61,12 @@ pub struct DisplayInfo;
 #[derive(Component)]
 pub struct Increment(pub f32);
 
-#[derive(AsBindGroup, TypeUuid, Clone)]
+// BASIC SHADER
+#[derive(AsBindGroup, Debug, TypeUuid, Clone)]
 #[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
 pub struct CustomMaterial {
     #[uniform(0)]
     pub color: Color,
-    #[uniform(0)]
-    pub time: f32,
     #[texture(1)]
     #[sampler(2)]
     pub image: Handle<Image>,
