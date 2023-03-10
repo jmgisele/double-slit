@@ -5,20 +5,31 @@ struct VertexOutput {
     @location(2) uv: vec2<f32>,
 };
 
-struct MyMat {
-    color: vec4<f32>
+struct SlitData {
+    separation: f32,      // centimeters
+    slit_width: f32,      // milimeters
+    wavelength: f32,      // nanometers
+    screen_distance: f32, // centimeters
 };
 
 @group(1) @binding(0)
-var<uniform> uniform_data: MyMat;
-@group(1) @binding(1)
-var texture: texture_2d<f32>;
-@group(1) @binding(2)
-var our_sampler: sampler;
+var<uniform> uniform_data: SlitData;
+
 
 @fragment
 fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
-    var output_color = textureSample(texture, our_sampler, input.uv);
-    output_color = output_color * uniform_data.color;
-    return output_color;
+    let x: f32 = input.uv.x;
+    
+    let displacement: f32 = 0.5 - x;
+
+    let separation: f32 = uniform_data.separation; // meters 
+    // let slit_width: f32 = uniform_data.slit_width * 0.001; // meters
+    // let wavelength: f32 = uniform_data.wavelength * 10e-9; // meters
+    
+
+
+
+    let intensity = sin( displacement * 100. );
+
+    return vec4<f32>(0.3, 0.0, intensity, 1.0);
 }

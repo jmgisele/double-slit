@@ -7,10 +7,10 @@ use bevy::{
 
 #[derive(Resource)]
 pub struct SlitStructure {
-    pub separation: f32,
-    pub slit_width: f32,
-    pub wavelength: f32,
-    pub screen_distance: f32,
+    pub separation: f32,      // centimeters
+    pub slit_width: f32,      // milimeters
+    pub wavelength: f32,      // nanometers
+    pub screen_distance: f32, // centimeters
 }
 
 impl Default for SlitStructure {
@@ -66,10 +66,13 @@ pub struct Increment(pub f32);
 #[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
 pub struct CustomMaterial {
     #[uniform(0)]
-    pub color: Color,
-    #[texture(1)]
-    #[sampler(2)]
-    pub image: Handle<Image>,
+    pub separation: f32,
+    // // #[uniform(2)]
+    pub slit_width: f32,
+    // // #[uniform(3)]
+    pub wavelength: f32,
+    // // #[uniform(4)]
+    pub screen_distance: f32,
 }
 
 impl Material2d for CustomMaterial {
