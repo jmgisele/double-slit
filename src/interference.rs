@@ -1,4 +1,5 @@
 use crate::component::SlitStructure;
+use crate::slit::update_display_criteria;
 use crate::{component::CustomMaterial, WINDOW_HEIGHT};
 use bevy::sprite::Material2dPlugin;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
@@ -6,8 +7,12 @@ pub struct InterferencePlugin;
 impl Plugin for InterferencePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(Material2dPlugin::<CustomMaterial>::default())
-            .add_startup_system_to_stage(StartupStage::PostStartup, setup_screen);
-        // .add_system(change_color);
+            // .add_startup_system_to_stage(StartupStage::PostStartup, setup_screen);
+            .add_system_set(
+                SystemSet::new()
+                    .with_run_criteria(update_display_criteria)
+                    .with_system(setup_screen),
+            );
     }
 }
 
@@ -40,17 +45,14 @@ fn setup_screen(
     });
 }
 
-pub fn change_color(mut materials: ResMut<Assets<CustomMaterial>>) {
+pub fn _change_shader(
+    mut materials: ResMut<Assets<CustomMaterial>>,
+    slit_structure: Res<SlitStructure>,
+) {
     for material in materials.iter_mut() {
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let color = Color::rgba(
-            rng.gen_range(0.0..1.),
-            rng.gen_range(0.0..1.),
-            rng.gen_range(0.0..1.),
-            1.,
-        );
-
-        // material.1.color = color;
+        material.1.screen_distance = slit_structure.screen_distance;
+        material.1.separation = slit_structure.separation;
+        material.1.slit_width = slit_structure.slit_width;
+        material.1.wavelength = slit_structure.wavelength;
     }
 }

@@ -130,7 +130,6 @@ pub fn update_slit_width(
     slit_structure: Res<SlitStructure>,
 ) {
     for mut transform in display_query.iter_mut() {
-        println!("updating slit width");
         transform.scale = Vec3::new(
             BASELINE_SLIT_WIDTH - (10. - slit_structure.slit_width) / 2.,
             BASELINE_SLIT_HEIGHT,
@@ -144,7 +143,6 @@ pub fn update_slit_distance(
     slit_structure: Res<SlitStructure>,
 ) {
     for mut transform in display_query.iter_mut() {
-        println!("updating screen distance");
         transform.translation = Vec3::new(
             BASELINE_SLIT_SCREEN_X,
             BASELINE_Y_SLITS + (100. - slit_structure.screen_distance) / 2.,
@@ -157,9 +155,7 @@ pub fn update_slit_separation(
     mut display_query: Query<(&mut Transform, &Slit)>,
     slit_structure: Res<SlitStructure>,
 ) {
-    println!("{}", slit_structure.separation);
     for (mut transform, slit) in display_query.iter_mut() {
-        println!("updating slit separation");
         match slit {
             Slit::LeftSlit => {
                 transform.translation = Vec3::new(

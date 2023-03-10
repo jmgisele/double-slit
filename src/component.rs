@@ -5,7 +5,7 @@ use bevy::{
     sprite::Material2d,
 };
 
-#[derive(Resource)]
+#[derive(Resource, Debug)]
 pub struct SlitStructure {
     pub separation: f32,      // centimeters
     pub slit_width: f32,      // milimeters
@@ -16,8 +16,8 @@ pub struct SlitStructure {
 impl Default for SlitStructure {
     fn default() -> Self {
         SlitStructure {
-            separation: 5.,        // centimeters
-            slit_width: 10.,       // milimeters
+            separation: 50.,       // micrometers
+            slit_width: 5.,        // micrometers
             wavelength: 500.,      // nanometers
             screen_distance: 100., // centimeters
         }
@@ -26,6 +26,7 @@ impl Default for SlitStructure {
 
 impl SlitStructure {
     pub fn add_val(&mut self, opt: &SlitControl, val: f32) {
+        println!("{:#?}", self);
         match opt {
             SlitControl::Separation => self.separation += val,
             SlitControl::ScreenDistance => self.screen_distance += val,
@@ -67,11 +68,11 @@ pub struct Increment(pub f32);
 pub struct CustomMaterial {
     #[uniform(0)]
     pub separation: f32,
-    // // #[uniform(2)]
+    #[uniform(1)]
     pub slit_width: f32,
-    // // #[uniform(3)]
+    #[uniform(2)]
     pub wavelength: f32,
-    // // #[uniform(4)]
+    #[uniform(3)]
     pub screen_distance: f32,
 }
 

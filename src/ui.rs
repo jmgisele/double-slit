@@ -90,7 +90,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent.spawn(get_slit_controls()).with_children(|parent| {
                 // SLIT SEPARATOR
                 parent.spawn(get_txt(
-                    "Slit Separation (cm)",
+                    "Slit Separation (micrometers)",
                     LABEL_TEXT_COLOR,
                     &asset_server,
                 ));
@@ -123,7 +123,11 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                             });
                     });
                 // SLIT WIDTH
-                parent.spawn(get_txt("Slit Width (mm)", LABEL_TEXT_COLOR, &asset_server));
+                parent.spawn(get_txt(
+                    "Slit Width (micrometers)",
+                    LABEL_TEXT_COLOR,
+                    &asset_server,
+                ));
                 parent
                     .spawn(get_control_container())
                     .with_children(|parent| {
