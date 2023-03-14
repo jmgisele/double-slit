@@ -1,12 +1,11 @@
 use crate::{
     component::{
-        CustomMaterial, DisplayInfo, Increment, Light, Slit, SlitControl, SlitScreen, SlitStructure,
+        DisplayInfo, Increment, Light, Slit, SlitControl, SlitScreen, SlitStructure, MAX_WAVELENGTH,
     },
     interference::{BASELINE_Y_SLITS, SLIT_SCREEN_HEIGHT},
-    ui::{setup_ui, NORMAL_BUTTON, PRESSED_BUTTON},
+    ui::{setup_ui, BACKDROUND_COLOR, NORMAL_BUTTON, PRESSED_BUTTON, SLIT_COLOR},
 };
-use bevy::math::f32::Quat;
-use bevy::sprite::Material2dPlugin;
+use bevy::math::{f32::Quat, vec4};
 use bevy::{ecs::schedule::ShouldRun, prelude::*, sprite::MaterialMesh2dBundle};
 
 pub struct SlitPlugin;
@@ -21,7 +20,7 @@ impl Plugin for SlitPlugin {
                     .with_system(update_slit_distance)
                     .with_system(update_slit_width)
                     .with_system(update_slit_separation)
-                    .with_system(update_light_color),
+                    .with_system(interpolate_light_color),
             )
             .add_system_set(
                 SystemSet::new()
@@ -31,7 +30,7 @@ impl Plugin for SlitPlugin {
     }
 }
 
-const BASELINE_SLIT_WIDTH: f32 = 3.;
+const BASELINE_SLIT_WIDTH: f32 = 1.5;
 const BASELINE_SLIT_HEIGHT: f32 = 5.;
 const BASELINE_SLIT_SCREEN_WIDTH: f32 = 300.;
 const BASELINE_SLIT_SCREEN_X: f32 = -200.;
@@ -46,7 +45,7 @@ fn setup_slits(
             mesh: meshes
                 .add(shape::Box::new(BASELINE_SLIT_SCREEN_WIDTH, SLIT_SCREEN_HEIGHT, 0.).into())
                 .into(),
-            material: materials.add(ColorMaterial::from(Color::PURPLE)),
+            material: materials.add(ColorMaterial::from(SLIT_COLOR)),
             transform: Transform::from_translation(Vec3::new(BASELINE_SLIT_SCREEN_X, 0., 0.)),
             ..default()
         })
@@ -57,7 +56,7 @@ fn setup_slits(
                     mesh: meshes
                         .add(shape::Box::new(BASELINE_SLIT_WIDTH, BASELINE_SLIT_HEIGHT, 0.).into())
                         .into(),
-                    material: materials.add(ColorMaterial::from(Color::WHITE)),
+                    material: materials.add(ColorMaterial::from(BACKDROUND_COLOR)),
                     transform: Transform::from_translation(Vec3::new(
                         BASELINE_SLIT_WIDTH * 3.,
                         0.,
@@ -72,7 +71,7 @@ fn setup_slits(
                     mesh: meshes
                         .add(shape::Box::new(BASELINE_SLIT_WIDTH, BASELINE_SLIT_HEIGHT, 0.).into())
                         .into(),
-                    material: materials.add(ColorMaterial::from(Color::WHITE)),
+                    material: materials.add(ColorMaterial::from(BACKDROUND_COLOR)),
                     transform: Transform::from_translation(Vec3::new(
                         -BASELINE_SLIT_WIDTH * 3.,
                         0.,
@@ -109,20 +108,45 @@ pub fn update_display_criteria(slit_structure: Res<SlitStructure>) -> ShouldRun 
     }
 }
 
-pub fn update_light_color(
+pub fn interpolate_light_color(
     display_query: Query<&Handle<ColorMaterial>, With<Light>>,
     slit_structure: Res<SlitStructure>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     for handle in display_query.iter() {
         let mut color_mat = materials.get_mut(&handle).unwrap();
-        color_mat.color = match slit_structure.wavelength.floor() as i32 {
-            400..=500 => Color::BLUE,
-            501..=600 => Color::GREEN,
-            601..=700 => Color::RED,
-            _ => Color::WHITE,
+
+        let wavelength = slit_structure.wavelength;
+
+        let min_visible = 400.;
+
+        if wavelength <= min_visible {
+            color_mat.color = Color::WHITE;
+            return;
+        } else {
+            let wave_range: f32 = MAX_WAVELENGTH - min_visible;
+            let t: f32 = (wavelength - min_visible) / wave_range;
+            color_mat.color = lerp_hsv(t);
+            return;
         }
     }
+}
+
+pub fn lerp_hsv(t: f32) -> Color {
+    let a = vec4(0., 100., 50., 1.0);
+    let b = vec4(285., 100., 50., 1.);
+
+    let d = b.x - a.x;
+
+    // a.x = a.x + 360.;
+    let h = b.x - t * d;
+
+    return Color::Hsla {
+        hue: h,
+        saturation: 1.,
+        lightness: 0.5,
+        alpha: 1.,
+    };
 }
 
 pub fn update_slit_width(
@@ -131,7 +155,7 @@ pub fn update_slit_width(
 ) {
     for mut transform in display_query.iter_mut() {
         transform.scale = Vec3::new(
-            BASELINE_SLIT_WIDTH - (10. - slit_structure.slit_width) / 2.,
+            BASELINE_SLIT_WIDTH - (5. - slit_structure.slit_width) / 5.,
             BASELINE_SLIT_HEIGHT,
             0.1,
         );
@@ -144,8 +168,8 @@ pub fn update_slit_distance(
 ) {
     for mut transform in display_query.iter_mut() {
         transform.translation = Vec3::new(
-            BASELINE_SLIT_SCREEN_X,
-            BASELINE_Y_SLITS + (100. - slit_structure.screen_distance) / 2.,
+            BASELINE_SLIT_SCREEN_X + (100. - slit_structure.screen_distance) / 5.,
+            BASELINE_Y_SLITS + (100. - slit_structure.screen_distance) / 5.,
             0.,
         );
     }
@@ -159,14 +183,14 @@ pub fn update_slit_separation(
         match slit {
             Slit::LeftSlit => {
                 transform.translation = Vec3::new(
-                    -(slit_structure.separation - 5.) / 2. - BASELINE_SLIT_WIDTH * 3.,
+                    -(slit_structure.separation - 50.) / 2. - BASELINE_SLIT_WIDTH * 3.,
                     0.,
                     0.1,
                 )
             }
             Slit::RightSlit => {
                 transform.translation = Vec3::new(
-                    (slit_structure.separation - 5.) / 2. + BASELINE_SLIT_WIDTH * 3.,
+                    (slit_structure.separation - 50.) / 2. + BASELINE_SLIT_WIDTH * 3.,
                     0.,
                     0.1,
                 )

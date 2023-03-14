@@ -7,10 +7,10 @@ use bevy::{
 
 #[derive(Resource, Debug)]
 pub struct SlitStructure {
-    pub separation: f32,      // centimeters
-    pub slit_width: f32,      // milimeters
-    pub wavelength: f32,      // nanometers
-    pub screen_distance: f32, // centimeters
+    pub separation: f32,
+    pub slit_width: f32,
+    pub wavelength: f32,
+    pub screen_distance: f32,
 }
 
 impl Default for SlitStructure {
@@ -24,14 +24,36 @@ impl Default for SlitStructure {
     }
 }
 
+pub const MAX_WAVELENGTH: f32 = 750.;
+pub const MIN_WAVELENGTH: f32 = 250.;
+
 impl SlitStructure {
     pub fn add_val(&mut self, opt: &SlitControl, val: f32) {
-        println!("{:#?}", self);
         match opt {
-            SlitControl::Separation => self.separation += val,
-            SlitControl::ScreenDistance => self.screen_distance += val,
-            SlitControl::Wavelength => self.wavelength += val,
-            SlitControl::Width => self.slit_width += val,
+            SlitControl::Separation => {
+                let new = self.separation + val;
+                if new >= 1. && new <= 100. {
+                    self.separation += val
+                }
+            }
+            SlitControl::ScreenDistance => {
+                let new = self.screen_distance + val;
+                if new >= 20. && new <= 200. {
+                    self.screen_distance += val
+                }
+            }
+            SlitControl::Wavelength => {
+                let new = self.wavelength + val;
+                if new <= MAX_WAVELENGTH && new >= MIN_WAVELENGTH {
+                    self.wavelength += val
+                }
+            }
+            SlitControl::Width => {
+                let new = self.slit_width + val;
+                if new >= 1. && new <= 15. {
+                    self.slit_width += val
+                }
+            }
         }
     }
 }
@@ -74,10 +96,14 @@ pub struct CustomMaterial {
     pub wavelength: f32,
     #[uniform(3)]
     pub screen_distance: f32,
+    #[uniform(4)]
+    pub background_color: Color,
+    #[uniform(5)]
+    pub border_color: Color,
 }
 
 impl Material2d for CustomMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/my_material.wgsl".into()
+        "shaders/interference.wgsl".into()
     }
 }

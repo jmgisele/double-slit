@@ -22,10 +22,12 @@ pub const BASELINE_X_SLITS: f32 = 150. - SLIT_SCREEN_WIDTH / 2.;
 pub const SLIT_SCREEN_WIDTH: f32 = 500.;
 pub const SLIT_SCREEN_HEIGHT: f32 = 100.;
 
+pub const SCREEN_COLOR: Color = Color::rgba_linear(0.3, 0.1, 0., 1.0);
+pub const BORDER_COLOR: Color = Color::rgba(0.27843, 0.18039, 0.12157, 1.0);
+
 fn setup_screen(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    assets: Res<AssetServer>,
     mut materials: ResMut<Assets<CustomMaterial>>,
     slit_structure: Res<SlitStructure>,
 ) {
@@ -39,20 +41,10 @@ fn setup_screen(
             separation: slit_structure.separation,
             slit_width: slit_structure.slit_width,
             wavelength: slit_structure.wavelength,
+            background_color: SCREEN_COLOR,
+            border_color: BORDER_COLOR,
         }),
         transform: Transform::from_translation(Vec3::new(BASELINE_X_SLITS, y, 0.)),
         ..default()
     });
-}
-
-pub fn _change_shader(
-    mut materials: ResMut<Assets<CustomMaterial>>,
-    slit_structure: Res<SlitStructure>,
-) {
-    for material in materials.iter_mut() {
-        material.1.screen_distance = slit_structure.screen_distance;
-        material.1.separation = slit_structure.separation;
-        material.1.slit_width = slit_structure.slit_width;
-        material.1.wavelength = slit_structure.wavelength;
-    }
 }

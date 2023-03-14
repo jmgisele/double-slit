@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{App, ClearColor, Color, PluginGroup},
+    prelude::{App, Camera2dBundle, ClearColor, Commands, PluginGroup},
     window::{WindowDescriptor, WindowPlugin},
     winit::WinitSettings,
     DefaultPlugins,
@@ -7,13 +7,12 @@ use bevy::{
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use interference::InterferencePlugin;
 use slit::SlitPlugin;
-use window::setup_camera;
+use ui::BACKDROUND_COLOR;
 
 mod component;
 mod interference;
 mod slit;
 mod ui;
-mod window;
 
 pub const WINDOW_HEIGHT: f32 = 400.;
 pub const WINDOW_WIDTH: f32 = 800.;
@@ -30,9 +29,14 @@ fn main() {
         }))
         // .add_plugin(WorldInspectorPlugin)
         .insert_resource(WinitSettings::desktop_app())
-        .insert_resource(ClearColor(Color::rgb(0.80000, 1.00000, 0.80000)))
+        .insert_resource(ClearColor(BACKDROUND_COLOR))
         .add_startup_system(setup_camera)
         .add_plugin(SlitPlugin)
         .add_plugin(InterferencePlugin)
         .run();
+}
+
+fn setup_camera(mut commands: Commands) {
+    // ui camera
+    commands.spawn(Camera2dBundle::default());
 }
