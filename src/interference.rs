@@ -37,13 +37,12 @@ fn setup_screen(
             .add(shape::Box::new(SLIT_SCREEN_WIDTH, SLIT_SCREEN_HEIGHT, 0.).into())
             .into(),
         material: materials.add(InterferenceMaterial {
-            screen_distance: slit_structure.screen_distance,
-            separation: slit_structure.separation,
-            slit_width: slit_structure.slit_width,
-            wavelength: slit_structure.wavelength,
+            screen_distance: Vec4::new(slit_structure.screen_distance, 0., 0., 0.),
+            separation: Vec4::new(slit_structure.separation, 0., 0., 0.),
+            slit_width: Vec4::new(slit_structure.slit_width, 0., 0., 0.),
+            wavelength: Vec4::new(slit_structure.wavelength, 0., 0., 0.),
             background_color: SCREEN_COLOR,
             border_color: BORDER_COLOR,
-            ..Default::default()
         }),
         transform: Transform::from_translation(Vec3::new(BASELINE_X_SLITS, y, 0.)),
         ..default()
