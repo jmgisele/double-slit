@@ -1,12 +1,12 @@
 use crate::component::SlitStructure;
 use crate::slit::update_display_criteria;
-use crate::{component::CustomMaterial, WINDOW_HEIGHT};
+use crate::{component::InterferenceMaterial, WINDOW_HEIGHT};
 use bevy::sprite::Material2dPlugin;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 pub struct InterferencePlugin;
 impl Plugin for InterferencePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(Material2dPlugin::<CustomMaterial>::default())
+        app.add_plugin(Material2dPlugin::<InterferenceMaterial>::default())
             // .add_startup_system_to_stage(StartupStage::PostStartup, setup_screen);
             .add_system_set(
                 SystemSet::new()
@@ -28,7 +28,7 @@ pub const BORDER_COLOR: Color = Color::rgba(0.27843, 0.18039, 0.12157, 1.0);
 fn setup_screen(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<CustomMaterial>>,
+    mut materials: ResMut<Assets<InterferenceMaterial>>,
     slit_structure: Res<SlitStructure>,
 ) {
     let y = (WINDOW_HEIGHT - SLIT_SCREEN_HEIGHT) / 2.;
@@ -36,13 +36,14 @@ fn setup_screen(
         mesh: meshes
             .add(shape::Box::new(SLIT_SCREEN_WIDTH, SLIT_SCREEN_HEIGHT, 0.).into())
             .into(),
-        material: materials.add(CustomMaterial {
+        material: materials.add(InterferenceMaterial {
             screen_distance: slit_structure.screen_distance,
             separation: slit_structure.separation,
             slit_width: slit_structure.slit_width,
             wavelength: slit_structure.wavelength,
             background_color: SCREEN_COLOR,
             border_color: BORDER_COLOR,
+            ..Default::default()
         }),
         transform: Transform::from_translation(Vec3::new(BASELINE_X_SLITS, y, 0.)),
         ..default()

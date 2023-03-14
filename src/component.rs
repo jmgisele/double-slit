@@ -87,22 +87,52 @@ pub struct Increment(pub f32);
 // BASIC SHADER
 #[derive(AsBindGroup, Debug, TypeUuid, Clone)]
 #[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
-pub struct CustomMaterial {
+pub struct InterferenceMaterial {
     #[uniform(0)]
     pub separation: f32,
+    #[uniform(0)]
+    pub _wasm_padding_0: Vec3,
+    //
     #[uniform(1)]
     pub slit_width: f32,
+    #[uniform(1)]
+    pub _wasm_padding_1: Vec3,
+    //
     #[uniform(2)]
     pub wavelength: f32,
+    #[uniform(2)]
+    pub _wasm_padding_2: Vec3,
+    //
     #[uniform(3)]
     pub screen_distance: f32,
+    #[uniform(3)]
+    pub _wasm_padding_3: Vec3,
+    //
     #[uniform(4)]
     pub background_color: Color,
+    //
     #[uniform(5)]
     pub border_color: Color,
 }
 
-impl Material2d for CustomMaterial {
+impl Default for InterferenceMaterial {
+    fn default() -> Self {
+        InterferenceMaterial {
+            separation: 0.,
+            _wasm_padding_0: Vec3::ZERO,
+            slit_width: 0.,
+            _wasm_padding_1: Vec3::ZERO,
+            wavelength: 0.,
+            _wasm_padding_2: Vec3::ZERO,
+            screen_distance: 0.,
+            _wasm_padding_3: Vec3::ZERO,
+            background_color: Color::WHITE,
+            border_color: Color::WHITE,
+        }
+    }
+}
+
+impl Material2d for InterferenceMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/interference.wgsl".into()
     }

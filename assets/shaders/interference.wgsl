@@ -7,15 +7,28 @@ struct VertexOutput {
 
 @group(1) @binding(0)
 var<uniform> separation: f32; // micrometers
+@group(1) @binding(0)
+var<uniform> _buff0 : vec3<f32>; // buffer
+
 @group(1) @binding(1)
 var<uniform> slit_width: f32; // micrometers
+@group(1) @binding(0)
+var<uniform> _buff1 : vec3<f32>; // buffer
+
 @group(1) @binding(2)
 var<uniform> wavelength: f32; // nanometers
+@group(1) @binding(0)
+var<uniform> _buff2 : vec3<f32>; // buffer
+
 @group(1) @binding(3)
 var<uniform> screen_distance: f32; // centimeters
+@group(1) @binding(0)
+var<uniform> _buff3: vec3<f32>; // buffer
+
 
 @group(1) @binding(4)
 var<uniform> background: vec4<f32>;
+
 @group(1) @binding (5)
 var<uniform> border: vec4<f32>;
 
