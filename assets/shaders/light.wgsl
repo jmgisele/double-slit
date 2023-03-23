@@ -50,7 +50,5 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
 
     var i: vec4<f32> = mix(background, light_color, intensity);
 
-    // i.z = intensity;
-
     return i;
 }

@@ -296,6 +296,31 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                                         ));
                                     });
                             });
+
+                        // Light vs Particles
+                        parent.spawn(get_txt(
+                            "Light vs Particles (m)",
+                            LABEL_TEXT_COLOR,
+                            &asset_server,
+                        ));
+                        parent
+                            .spawn(get_control_container())
+                            .with_children(|parent| {
+                                parent
+                                    .spawn(get_button_bkgnd())
+                                    .insert(SlitControl::Input)
+                                    .insert(Increment(0.))
+                                    .with_children(|parent| {
+                                        parent
+                                            .spawn(get_txt(
+                                                &defaults.toggle_input.to_string(),
+                                                BUTTON_TEXT_COLOR,
+                                                &asset_server,
+                                            ))
+                                            .insert(SlitControl::Input)
+                                            .insert(DisplayInfo);
+                                    });
+                            });
                     });
 
                 // asterisk

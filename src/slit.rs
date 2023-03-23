@@ -273,15 +273,13 @@ pub fn update_display_buttons(
             SlitControl::ScreenDistance => (slit_structure.screen_distance / 100.).to_string(),
             SlitControl::Wavelength => slit_structure.wavelength.to_string(),
             SlitControl::Width => slit_structure.slit_width.to_string(),
+            SlitControl::Input => slit_structure.toggle_input.to_string(),
         };
     }
 }
 
 pub fn increment_sep_system(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor, &Increment, &SlitControl),
-        With<Button>,
-    >,
+    mut interaction_query: Query<(&Interaction, &mut BackgroundColor, &Increment, &SlitControl)>,
     mut slit_structure: ResMut<SlitStructure>,
 ) {
     for (interaction, mut color, incr, adjust_type) in &mut interaction_query {
