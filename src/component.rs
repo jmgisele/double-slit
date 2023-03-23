@@ -24,8 +24,8 @@ impl Default for SlitStructure {
     }
 }
 
-pub const MAX_WAVELENGTH: f32 = 750.;
-pub const MIN_WAVELENGTH: f32 = 250.;
+pub const MAX_WAVELENGTH: f32 = 800.;
+pub const MIN_WAVELENGTH: f32 = 200.;
 
 impl SlitStructure {
     pub fn add_val(&mut self, opt: &SlitControl, val: f32) {
@@ -101,6 +101,8 @@ pub struct InterferenceMaterial {
     #[uniform(4)]
     pub background_color: Color,
     #[uniform(5)]
+    pub light_color: Color,
+    #[uniform(6)]
     pub border_color: Color,
 }
 

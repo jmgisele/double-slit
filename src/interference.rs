@@ -1,5 +1,5 @@
 use crate::component::SlitStructure;
-use crate::slit::update_display_criteria;
+use crate::slit::{update_display_criteria, wavelength_to_rgb};
 use crate::{component::InterferenceMaterial, WINDOW_HEIGHT};
 use bevy::sprite::Material2dPlugin;
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
@@ -42,6 +42,7 @@ fn setup_screen(
             slit_width: Vec4::new(slit_structure.slit_width, 0., 0., 0.),
             wavelength: Vec4::new(slit_structure.wavelength, 0., 0., 0.),
             background_color: SCREEN_COLOR,
+            light_color: wavelength_to_rgb(&slit_structure.wavelength),
             border_color: BORDER_COLOR,
         }),
         transform: Transform::from_translation(Vec3::new(BASELINE_X_SLITS, y, 0.)),

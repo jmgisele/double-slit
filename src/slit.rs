@@ -1,7 +1,5 @@
 use crate::{
-    component::{
-        DisplayInfo, Increment, Light, Slit, SlitControl, SlitScreen, SlitStructure, MAX_WAVELENGTH,
-    },
+    component::{DisplayInfo, Increment, Light, Slit, SlitControl, SlitScreen, SlitStructure},
     interference::{BASELINE_Y_SLITS, SLIT_SCREEN_HEIGHT},
     ui::{setup_ui, BACKDROUND_COLOR, NORMAL_BUTTON, PRESSED_BUTTON, SLIT_COLOR},
 };
@@ -118,21 +116,87 @@ pub fn interpolate_light_color(
 
         let wavelength = slit_structure.wavelength;
 
-        let min_visible = 400.;
+        let min_visible = 380.;
+        let max_visible: f32 = 780.;
 
-        if wavelength <= min_visible {
-            color_mat.color = Color::WHITE;
+        if wavelength <= min_visible || wavelength >= max_visible {
+            color_mat.color = Color::BLACK;
             return;
         } else {
-            let wave_range: f32 = MAX_WAVELENGTH - min_visible;
-            let t: f32 = (wavelength - min_visible) / wave_range;
-            color_mat.color = lerp_hsv(t);
-            return;
+            // let wave_range: f32 = MAX_WAVELENGTH - min_visible;
+            // let t: f32 = (wavelength - min_visible) / wave_range;
+            // color_mat.color = lerp_hsv(t);
+            color_mat.color = wavelength_to_rgb(&wavelength);
         }
     }
 }
 
-pub fn lerp_hsv(t: f32) -> Color {
+pub fn wavelength_to_rgb(lambda: &f32) -> Color {
+    // adapted from https://codepen.io/pen?editors=0010
+    // thx
+    let mut red;
+    let mut blue;
+    let mut green;
+    let factor;
+    let wavelength = lambda.clone();
+
+    const INTENSITYMAX: f32 = 1.;
+    const GAMMA: f32 = 0.8;
+
+    if (wavelength >= 380.) && (wavelength < 440.) {
+        red = -(wavelength - 440.) / (440. - 380.);
+        green = 0.0;
+        blue = 1.0;
+    } else if (wavelength >= 440.) && (wavelength < 490.) {
+        red = 0.0;
+        green = (wavelength - 440.) / (490. - 440.);
+        blue = 1.0;
+    } else if (wavelength >= 490.) && (wavelength < 510.) {
+        red = 0.0;
+        green = 1.0;
+        blue = -(wavelength - 510.) / (510. - 490.);
+    } else if (wavelength >= 510.) && (wavelength < 580.) {
+        red = (wavelength - 510.) / (580. - 510.);
+        green = 1.0;
+        blue = 0.0;
+    } else if (wavelength >= 580.) && (wavelength < 645.) {
+        red = 1.0;
+        green = -(wavelength - 645.) / (645. - 580.);
+        blue = 0.0;
+    } else if (wavelength >= 645.) && (wavelength < 781.) {
+        red = 1.0;
+        green = 0.0;
+        blue = 0.0;
+    } else {
+        red = 0.0;
+        green = 0.0;
+        blue = 0.0;
+    };
+    // Let the intensity fall off near the vision limits
+    if (wavelength >= 380.) && (wavelength < 420.) {
+        factor = 0.3 + 0.7 * (wavelength - 380.) / (420. - 380.);
+    } else if (wavelength >= 420.) && (wavelength < 701.) {
+        factor = 1.0;
+    } else if (wavelength >= 701.) && (wavelength < 781.) {
+        factor = 0.3 + 0.7 * (780. - wavelength) / (780. - 700.);
+    } else {
+        factor = 0.0;
+    };
+
+    if red != 0. {
+        red = INTENSITYMAX * f32::powf(red * factor, GAMMA);
+    }
+    if green != 0. {
+        green = INTENSITYMAX * f32::powf(green * factor, GAMMA);
+    }
+    if blue != 0. {
+        blue = INTENSITYMAX * f32::powf(blue * factor, GAMMA);
+    }
+
+    return Color::rgb(red, green, blue);
+}
+
+pub fn _lerp_hsv(t: f32) -> Color {
     let a = vec4(0., 100., 50., 1.0);
     let b = vec4(285., 100., 50., 1.);
 
@@ -216,12 +280,13 @@ pub fn update_display_buttons(
 pub fn increment_sep_system(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &Increment, &SlitControl),
-        (Changed<Interaction>, With<Button>),
+        With<Button>,
     >,
     mut slit_structure: ResMut<SlitStructure>,
 ) {
     for (interaction, mut color, incr, adjust_type) in &mut interaction_query {
         match *interaction {
+            // dreaming about the day bevy adds a "plus" state
             Interaction::Clicked => {
                 *color = PRESSED_BUTTON.into();
                 slit_structure.add_val(adjust_type, incr.0);

@@ -16,7 +16,9 @@ var<uniform> screen_distance: vec4<f32>; // centimeters
 
 @group(1) @binding(4)
 var<uniform> background: vec4<f32>;
-@group(1) @binding (5)
+@group(1) @binding(5)
+var<uniform> light_color: vec4<f32>;
+@group(1) @binding (6)
 var<uniform> border: vec4<f32>;
 
 @fragment
@@ -42,13 +44,13 @@ fn fragment(input: VertexOutput) -> @location(0) vec4<f32> {
     let probability: f32 = (sin(coeff_a) / coeff_a) * (sin(coeff_a) / coeff_a);
 
     let coeff_b: f32 = ((3.1415 * separation) / wavelength) * sine_theta;
-    let interference: f32 = cos(coeff_b) * cos(coeff_b) ;
+    let interference: f32 = cos(coeff_b) * cos(coeff_b);
 
     let intensity: f32 = probability * interference;
 
-    var i: vec4<f32> = background;
+    var i: vec4<f32> = mix(background, light_color, intensity);
 
-    i.z = intensity;
+    // i.z = intensity;
 
     return i;
 }
