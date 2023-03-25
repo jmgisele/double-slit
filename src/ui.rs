@@ -92,6 +92,7 @@ pub fn get_txt(txt: &str, clr: Color, asset_server: &Res<AssetServer>) -> TextBu
             color: clr,
         },
     )
+    .with_text_alignment(TextAlignment::Center)
 }
 
 pub fn get_asterisk_txt(txt: &str, clr: Color, asset_server: &Res<AssetServer>) -> TextBundle {

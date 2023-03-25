@@ -1,8 +1,13 @@
 use bevy::{
     prelude::*,
     reflect::TypeUuid,
-    render::render_resource::{AsBindGroup, ShaderRef},
-    sprite::Material2d,
+    render::{
+        mesh::MeshVertexBufferLayout,
+        render_resource::{
+            AsBindGroup, RenderPipelineDescriptor, ShaderRef, SpecializedMeshPipelineError,
+        },
+    },
+    sprite::{Material2d, Material2dKey},
 };
 
 #[derive(Debug, Component)]
@@ -17,6 +22,7 @@ impl std::fmt::Display for InputType {
     }
 }
 
+//
 #[derive(Resource, Debug)]
 pub struct SlitStructure {
     pub separation: f32,
@@ -78,6 +84,17 @@ impl SlitStructure {
     }
 }
 
+#[derive(Resource)]
+pub struct ParticleTimer(pub Timer);
+
+impl Default for ParticleTimer {
+    fn default() -> Self {
+        Self(Timer::from_seconds(0.005, TimerMode::Repeating))
+    }
+}
+
+// UI
+
 #[derive(Component, Copy, Clone)]
 pub enum SlitControl {
     Separation,
@@ -104,6 +121,27 @@ pub struct DisplayInfo;
 
 #[derive(Component)]
 pub struct Increment(pub f32);
+
+// SHADERS
+#[derive(Resource, Debug)]
+pub struct ParticlesMesh(pub Vec<[f32; 3]>);
+
+impl ParticlesMesh {
+    pub fn add_particle(&mut self, coords: [f32; 3]) {
+        self.0.push(coords);
+        // println!("{:#?}", self.0);
+    }
+
+    pub fn reset_mesh(&mut self) {
+        self.0 = vec![];
+    }
+}
+
+impl Default for ParticlesMesh {
+    fn default() -> Self {
+        ParticlesMesh(vec![])
+    }
+}
 
 #[derive(AsBindGroup, Debug, TypeUuid, Clone)]
 #[uuid = "f690fdae-d598-45ab-8225-97e2a3f056e0"]
@@ -134,27 +172,44 @@ impl Material2d for LightMaterial {
 
 #[derive(AsBindGroup, Debug, TypeUuid, Clone)]
 #[uuid = "2d1e7208-7dd0-4834-8e0a-163ed6b06aa8"]
-pub struct ParticlesMaterial {
-    // have to be vec4s so they're all padded correctly or wasm won't compile
+pub struct ScreenMaterial {
     #[uniform(0)]
-    pub separation: Vec4,
+    pub color: Color,
     #[uniform(1)]
-    pub slit_width: Vec4,
-    #[uniform(2)]
-    pub wavelength: Vec4,
-    #[uniform(3)]
-    pub screen_distance: Vec4,
-    //
-    #[uniform(4)]
-    pub background_color: Color,
-    #[uniform(5)]
-    pub light_color: Color,
-    #[uniform(6)]
-    pub border_color: Color,
+    pub border: Color,
+}
+
+impl Material2d for ScreenMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/screen.wgsl".into()
+    }
+}
+#[derive(AsBindGroup, Debug, TypeUuid, Clone)]
+#[uuid = "ff3c172b-415f-41f4-811d-aaca03c5d103"]
+pub struct ParticlesMaterial {
+    #[uniform(0)]
+    pub color: Color,
 }
 
 impl Material2d for ParticlesMaterial {
+    fn vertex_shader() -> ShaderRef {
+        "shaders/particles.vert".into()
+    }
+
     fn fragment_shader() -> ShaderRef {
-        "shaders/particles.wgsl".into()
+        "shaders/particles.frag".into()
+    }
+
+    // Bevy assumes by default that vertex shaders use the "vertex" entry point
+    // and fragment shaders use the "fragment" entry point (for WGSL shaders).
+    // GLSL uses "main" as the entry point, so we must override the defaults here
+    fn specialize(
+        descriptor: &mut RenderPipelineDescriptor,
+        _layout: &MeshVertexBufferLayout,
+        _key: Material2dKey<Self>,
+    ) -> Result<(), SpecializedMeshPipelineError> {
+        descriptor.vertex.entry_point = "main".into();
+        descriptor.fragment.as_mut().unwrap().entry_point = "main".into();
+        Ok(())
     }
 }

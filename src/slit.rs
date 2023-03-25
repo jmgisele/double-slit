@@ -4,7 +4,7 @@ use crate::{
     ui::{setup_ui, BACKDROUND_COLOR, NORMAL_BUTTON, PRESSED_BUTTON, SLIT_COLOR},
 };
 use bevy::math::{f32::Quat, vec4};
-use bevy::{ecs::schedule::ShouldRun, prelude::*, sprite::MaterialMesh2dBundle};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 pub struct SlitPlugin;
 impl Plugin for SlitPlugin {
@@ -12,19 +12,12 @@ impl Plugin for SlitPlugin {
         app.add_startup_system(setup_ui)
             .add_startup_system(setup_slits)
             .add_system(increment_sep_system)
-            .add_system_set(
-                SystemSet::new()
-                    .with_run_criteria(update_display_criteria)
-                    .with_system(update_slit_distance)
-                    .with_system(update_slit_width)
-                    .with_system(update_slit_separation)
-                    .with_system(interpolate_light_color),
-            )
-            .add_system_set(
-                SystemSet::new()
-                    .with_run_criteria(update_display_criteria)
-                    .with_system(update_display_buttons),
-            );
+            .add_system(update_slit_distance.run_if(update_display_criteria))
+            .add_system(update_slit_distance.run_if(update_display_criteria))
+            .add_system(update_slit_width.run_if(update_display_criteria))
+            .add_system(update_slit_separation.run_if(update_display_criteria))
+            .add_system(interpolate_light_color.run_if(update_display_criteria))
+            .add_system(update_display_buttons.run_if(update_display_criteria));
     }
 }
 
@@ -98,11 +91,11 @@ fn setup_slits(
         });
 }
 
-pub fn update_display_criteria(slit_structure: Res<SlitStructure>) -> ShouldRun {
+pub fn update_display_criteria(slit_structure: Res<SlitStructure>) -> bool {
     if slit_structure.is_changed() {
-        ShouldRun::Yes
+        true
     } else {
-        ShouldRun::No
+        false
     }
 }
 
@@ -277,9 +270,15 @@ pub fn update_display_buttons(
         };
     }
 }
-
+// mut interaction_query: Query<
+//         (&Interaction, &mut BackgroundColor),
+//         (Changed<Interaction>, With<Button>),
+//     >,
 pub fn increment_sep_system(
-    mut interaction_query: Query<(&Interaction, &mut BackgroundColor, &Increment, &SlitControl)>,
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor, &Increment, &SlitControl),
+        Changed<Interaction>,
+    >,
     mut slit_structure: ResMut<SlitStructure>,
 ) {
     for (interaction, mut color, incr, adjust_type) in &mut interaction_query {

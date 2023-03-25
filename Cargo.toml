@@ -4,11 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# remove dynamic before releasing! just speeds up dev compile times
+# remove dynamic_linking before releasing! just speeds up dev compile times
 # bevy = { version = "0.9.1", features = ["wayland", "x11"] }
-bevy = { version = "0.9.1", features = ["wayland", "x11", "dynamic"] }
-bevy-inspector-egui = "0.17.0"
-bevy_prototype_lyon = "0.7.2"
+bevy = { version = "0.10.0", features = ["wayland", "x11", "dynamic_linking"] }
 rand = "0.8.5"
 
 # if mold is misbehaving, comment me out
