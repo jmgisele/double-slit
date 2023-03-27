@@ -83,6 +83,20 @@ pub fn get_button_bkgnd() -> ButtonBundle {
     }
 }
 
+pub fn get_big_button_bkgnd() -> ButtonBundle {
+    ButtonBundle {
+        style: Style {
+            size: Size::new(Val::Px(60.0), Val::Px(20.0)),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_grow: 1.,
+            ..default()
+        },
+        background_color: NORMAL_BUTTON.into(),
+        ..default()
+    }
+}
+
 pub fn get_txt(txt: &str, clr: Color, asset_server: &Res<AssetServer>) -> TextBundle {
     TextBundle::from_section(
         txt,
@@ -300,7 +314,7 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 
                         // Light vs Particles
                         parent.spawn(get_txt(
-                            "Light vs Particles (m)",
+                            "Light vs Particles",
                             LABEL_TEXT_COLOR,
                             &asset_server,
                         ));
@@ -308,9 +322,9 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                             .spawn(get_control_container())
                             .with_children(|parent| {
                                 parent
-                                    .spawn(get_button_bkgnd())
-                                    .insert(SlitControl::Input)
+                                    .spawn(get_big_button_bkgnd())
                                     .insert(Increment(0.))
+                                    .insert(SlitControl::Input)
                                     .with_children(|parent| {
                                         parent
                                             .spawn(get_txt(
@@ -318,8 +332,8 @@ pub fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                                                 BUTTON_TEXT_COLOR,
                                                 &asset_server,
                                             ))
-                                            .insert(SlitControl::Input)
-                                            .insert(DisplayInfo);
+                                            .insert(DisplayInfo)
+                                            .insert(SlitControl::Input);
                                     });
                             });
                     });
