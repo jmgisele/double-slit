@@ -21,5 +21,7 @@ watch-wasm:
 	cargo watch -cx "run --release --target wasm32-unknown-unknown"
 
 build-wasm: install-wasm
+	rm -r out/assets
+	cp -r assets/ out/assets/
 	cargo build --release --target wasm32-unknown-unknown
 	wasm-bindgen --out-dir ./out/ --target web ./target/wasm32-unknown-unknown/release/double_slit.wasm

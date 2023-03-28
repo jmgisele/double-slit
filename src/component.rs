@@ -166,9 +166,30 @@ pub struct LightMaterial {
 
 impl Material2d for LightMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/light.wgsl".into()
+        "shaders/webgpu/light.wgsl".into()
     }
 }
+
+// for whatever reason the WASM version
+// breaks with multiple GLSL shaders.
+// going back to webgpu till i sort that out lol
+// impl Material2d for LightMaterial {
+//     fn fragment_shader() -> ShaderRef {
+//         "shaders/light.frag".into()
+//     }
+
+//     // Bevy assumes by default that vertex shaders use the "vertex" entry point
+//     // and fragment shaders use the "fragment" entry point (for WGSL shaders).
+//     // GLSL uses "main" as the entry point, so we must override the defaults here
+//     fn specialize(
+//         descriptor: &mut RenderPipelineDescriptor,
+//         _layout: &MeshVertexBufferLayout,
+//         _key: Material2dKey<Self>,
+//     ) -> Result<(), SpecializedMeshPipelineError> {
+//         descriptor.fragment.as_mut().unwrap().entry_point = "main".into();
+//         Ok(())
+//     }
+// }
 
 #[derive(AsBindGroup, Debug, TypeUuid, Clone)]
 #[uuid = "2d1e7208-7dd0-4834-8e0a-163ed6b06aa8"]
@@ -181,9 +202,31 @@ pub struct ScreenMaterial {
 
 impl Material2d for ScreenMaterial {
     fn fragment_shader() -> ShaderRef {
-        "shaders/screen.wgsl".into()
+        "shaders/webgpu/screen.wgsl".into()
     }
 }
+
+// for whatever reason the WASM version
+// breaks with multiple GLSL shaders.
+// going back to webgpu till i sort that out lol
+// impl Material2d for ScreenMaterial {
+//     fn fragment_shader() -> ShaderRef {
+//         "shaders/screen.frag".into()
+//     }
+
+//     // Bevy assumes by default that vertex shaders use the "vertex" entry point
+//     // and fragment shaders use the "fragment" entry point (for WGSL shaders).
+//     // GLSL uses "main" as the entry point, so we must override the defaults here
+//     fn specialize(
+//         descriptor: &mut RenderPipelineDescriptor,
+//         _layout: &MeshVertexBufferLayout,
+//         _key: Material2dKey<Self>,
+//     ) -> Result<(), SpecializedMeshPipelineError> {
+//         descriptor.fragment.as_mut().unwrap().entry_point = "main".into();
+//         Ok(())
+//     }
+// }
+
 #[derive(AsBindGroup, Debug, TypeUuid, Clone)]
 #[uuid = "ff3c172b-415f-41f4-811d-aaca03c5d103"]
 pub struct ParticlesMaterial {

@@ -12,12 +12,16 @@ impl Plugin for SlitPlugin {
         app.add_startup_system(setup_ui)
             .add_startup_system(setup_slits)
             .add_system(increment_sep_system)
-            .add_system(update_slit_distance.run_if(update_display_criteria))
-            .add_system(update_slit_distance.run_if(update_display_criteria))
-            .add_system(update_slit_width.run_if(update_display_criteria))
-            .add_system(update_slit_separation.run_if(update_display_criteria))
-            .add_system(interpolate_light_color.run_if(update_display_criteria))
-            .add_system(update_display_buttons.run_if(update_display_criteria));
+            .add_systems(
+                (
+                    update_slit_distance,
+                    update_slit_width,
+                    update_slit_separation,
+                    interpolate_light_color,
+                    update_display_buttons,
+                )
+                    .distributive_run_if(update_display_criteria),
+            );
     }
 }
 
@@ -113,20 +117,21 @@ pub fn interpolate_light_color(
         let max_visible: f32 = 780.;
 
         if wavelength <= min_visible || wavelength >= max_visible {
+            // we cannot actually see this light
             color_mat.color = Color::BLACK;
             return;
         } else {
-            // let wave_range: f32 = MAX_WAVELENGTH - min_visible;
-            // let t: f32 = (wavelength - min_visible) / wave_range;
-            // color_mat.color = lerp_hsv(t);
             color_mat.color = wavelength_to_rgb(&wavelength);
         }
     }
 }
 
 pub fn wavelength_to_rgb(lambda: &f32) -> Color {
-    // adapted from https://codepen.io/pen?editors=0010
-    // thx
+    // turns out there is not an Authoritative Relationship
+    // between color and wavelength (unlike, say, sound and wavelength/freq.)
+    // Bonkers! you gotta just swing ur own
+    // this one is adapted from https://codepen.io/pen?editors=0010
+    // thx!!
     let mut red;
     let mut blue;
     let mut green;
@@ -195,7 +200,6 @@ pub fn _lerp_hsv(t: f32) -> Color {
 
     let d = b.x - a.x;
 
-    // a.x = a.x + 360.;
     let h = b.x - t * d;
 
     return Color::Hsla {
@@ -270,10 +274,7 @@ pub fn update_display_buttons(
         };
     }
 }
-// mut interaction_query: Query<
-//         (&Interaction, &mut BackgroundColor),
-//         (Changed<Interaction>, With<Button>),
-//     >,
+
 pub fn increment_sep_system(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor, &Increment, &SlitControl),
@@ -283,7 +284,7 @@ pub fn increment_sep_system(
 ) {
     for (interaction, mut color, incr, adjust_type) in &mut interaction_query {
         match *interaction {
-            // dreaming about the day bevy adds a "plus" state
+            // dreaming about the day bevy adds a "pressed" state
             Interaction::Clicked => {
                 *color = PRESSED_BUTTON.into();
                 slit_structure.add_val(adjust_type, incr.0);

@@ -9,12 +9,14 @@ use ui::BACKDROUND_COLOR;
 
 mod component;
 mod interference;
-mod particles;
 mod slit;
 mod ui;
 
-pub const WINDOW_HEIGHT: f32 = 400.;
-pub const WINDOW_WIDTH: f32 = 800.;
+// keep these at a 1:2 ratio or the physics math doesn't work out
+// if you change my ratio. change it in the shaders too!
+
+pub const WINDOW_HEIGHT: f32 = 500.;
+pub const WINDOW_WIDTH: f32 = 1000.;
 
 const TIMESTEP_60_PER_SECOND: f32 = 1.0 / 60.0;
 
