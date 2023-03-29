@@ -167,14 +167,14 @@ fn prob_y(y: f32, slit: &SlitStructure) -> f32 {
 
     let displacement: f32 = (y - 0.5) * full_screen_width;
 
-    let slit_width: f32 = slit.slit_width * 10e-6; // meters
+    let slit_height: f32 = 5. * 10e-6; // meters
     let wavelength: f32 = slit.wavelength * 10e-9; // meters
     let screen_distance: f32 = slit.screen_distance * 0.01; // meters
 
     let sine_theta: f32 =
         displacement / (displacement * displacement + screen_distance * screen_distance).sqrt();
 
-    let coeff_a: f32 = ((3.1415 * slit_width) / wavelength) * sine_theta;
+    let coeff_a: f32 = ((3.1415 * slit_height) / wavelength) * sine_theta;
 
     (coeff_a.sin() / coeff_a) * (coeff_a.sin() / coeff_a)
 }
