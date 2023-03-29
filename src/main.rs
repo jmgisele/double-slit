@@ -15,8 +15,8 @@ mod ui;
 // keep these at a 1:2 ratio or the physics math doesn't work out
 // if you change my ratio. change it in the shaders too!
 
-pub const WINDOW_HEIGHT: f32 = 500.;
-pub const WINDOW_WIDTH: f32 = 1000.;
+pub const WINDOW_HEIGHT: f32 = 375.;
+pub const WINDOW_WIDTH: f32 = 750.;
 
 const TIMESTEP_60_PER_SECOND: f32 = 1.0 / 60.0;
 
